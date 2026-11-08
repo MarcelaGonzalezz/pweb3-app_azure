@@ -30,7 +30,7 @@ public class AccountController : Controller
         if (result.Succeeded)
         {
             await _signIn.SignInAsync(user, isPersistent: false);
-            return RedirectToAction("Index", "Files");
+            return RedirectToAction("Index", "Home");
         }
 
         foreach (var error in result.Errors)
@@ -56,7 +56,7 @@ public class AccountController : Controller
         {
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
-            return RedirectToAction("Index", "Files");
+            return RedirectToAction("Index", "Home");
         }
 
         ModelState.AddModelError("", "Email o contraseña incorrectos.");

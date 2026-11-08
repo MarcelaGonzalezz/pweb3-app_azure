@@ -22,9 +22,17 @@ public class FilesController : Controller
         _blobs = blobs;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Explorar()
     {
         var files = await _db.Files
+            .OrderByDescending(f => f.UploadedAtUtc)
+            .ToListAsync();
+        return View(files);
+    }
+    public async Task<IActionResult> MyFiles() {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var files = await _db.Files
+            .Where(f => f.UploadedByUserId == userId)
             .OrderByDescending(f => f.UploadedAtUtc)
             .ToListAsync();
         return View(files);
@@ -38,12 +46,12 @@ public class FilesController : Controller
         if (file is null || file.Length == 0)
         {
             TempData["Error"] = "Seleccioná un archivo.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Explorar));
         }
         if (file.Length > MaxFileSize)
         {
             TempData["Error"] = "El archivo supera los 50 MB.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Explorar));
         }
 
         var blobName = Guid.NewGuid().ToString("N");
@@ -77,7 +85,7 @@ public class FilesController : Controller
         }
 
         TempData["Success"] = "Archivo subido correctamente.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Explorar));
     }
 
     public async Task<IActionResult> Download(Guid id)
@@ -103,6 +111,6 @@ public class FilesController : Controller
         await _db.SaveChangesAsync();
 
         TempData["Success"] = "Archivo eliminado.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(MyFiles));
     }
 }

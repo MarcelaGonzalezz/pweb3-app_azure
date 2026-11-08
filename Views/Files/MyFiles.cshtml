@@ -1,0 +1,72 @@
+﻿@model IEnumerable<StoredFile>
+@{
+    ViewData["Title"] = "Mis documentos";
+
+    string FormatSize(long bytes) =>
+        bytes >= 1024 * 1024 ? $"{bytes / 1024.0 / 1024.0:F1} MB" :
+        bytes >= 1024 ? $"{bytes / 1024.0:F1} KB" : $"{bytes} B";
+}
+
+@if (TempData["Success"] is string ok) {
+    <div class="alert alert-success"><i class="bi bi-check-circle"></i> @ok</div>
+}
+@if (TempData["Error"] is string err) {
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @err</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-folder2-open"></i> Mis documentos</h4>
+    <a asp-action="Index" class="btn btn-primary"><i class="bi bi-cloud-arrow-up"></i> Subir archivo</a>
+</div>
+
+@if (!Model.Any()) {
+    <p class="text-muted">Todavía no subiste ningún archivo.</p>
+} else {
+    <table id="tablaMisArchivos" class="table table-striped align-middle">
+        <thead>
+            <tr><th>Nombre</th><th>Tamaño</th><th>Fecha (UTC)</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var f in Model) {
+                <tr>
+                    <td><i class="bi bi-file-earmark-text"></i> @f.OriginalName</td>
+                    <td data-order="@f.SizeBytes">@FormatSize(f.SizeBytes)</td>
+                    <td>@f.UploadedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" asp-action="Download" asp-route-id="@f.Id"><i class="bi bi-download"></i> Descargar</a>
+                        <form asp-action="Delete" asp-route-id="@f.Id" method="post" class="d-inline form-eliminar">
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#tablaMisArchivos').DataTable({
+                language: { url: 'https://cdn.datatables.net/plug-ins/2.1.8/i18n/es-ES.json' },
+                order: [[2, 'desc']],
+                columnDefs: [{ orderable: false, targets: 3 }]
+            });
+
+            // Confirmación con SweetAlert2
+            $(document).on('submit', '.form-eliminar', function (e) {
+                e.preventDefault();
+                const form = this;
+                Swal.fire({
+                    title: '¿Eliminar este archivo?',
+                    text: 'Se borra de Azure Blob Storage y no se puede deshacer.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then(r => { if (r.isConfirmed) form.submit(); });
+            });
+        });
+    </script>
+}

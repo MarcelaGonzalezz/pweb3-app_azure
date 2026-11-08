@@ -11,7 +11,12 @@
 <body>
     <nav class="navbar navbar-expand navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" asp-controller="Files" asp-action="Index"><i class="bi bi-cloud-arrow-up"></i> FileShare</a>
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index"><i class="bi bi-cloud-arrow-up"></i> FileShare</a>   
+            @if (User.Identity?.IsAuthenticated == true) {
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Files" asp-action="Explorar"><i class="bi bi-globe2"></i> Explorar</a></li>                    <li class="nav-item"><a class="nav-link" asp-controller="Files" asp-action="MyFiles"><i class="bi bi-folder2-open"></i> Mis documentos</a></li>
+                </ul>
+            }
             <ul class="navbar-nav ms-auto align-items-center">
                 @if (User.Identity?.IsAuthenticated == true) {
                     <li class="nav-item text-light me-3"><i class="bi bi-person-circle"></i> @User.Identity.Name</li>
