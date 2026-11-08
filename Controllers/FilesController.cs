@@ -9,26 +9,24 @@ using Microsoft.EntityFrameworkCore;
 namespace FileShareApp.Controllers;
 
 [Authorize]
-public class FilesController : Controller
-{
+public class FilesController : Controller {
     private const long MaxFileSize = 50L * 1024 * 1024; // 50 MB
 
     private readonly AppDbContext _db;
     private readonly BlobStorageService _blobs;
 
-    public FilesController(AppDbContext db, BlobStorageService blobs)
-    {
+    public FilesController(AppDbContext db, BlobStorageService blobs) {
         _db = db;
         _blobs = blobs;
     }
 
-    public async Task<IActionResult> Explorar()
-    {
+    public async Task<IActionResult> Explorar() {
         var files = await _db.Files
             .OrderByDescending(f => f.UploadedAtUtc)
             .ToListAsync();
         return View(files);
     }
+
     public async Task<IActionResult> MyFiles() {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var files = await _db.Files
@@ -41,17 +39,17 @@ public class FilesController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     [RequestSizeLimit(MaxFileSize)]
     [RequestFormLimits(MultipartBodyLengthLimit = MaxFileSize)]
-    public async Task<IActionResult> Upload(IFormFile? file)
-    {
-        if (file is null || file.Length == 0)
-        {
+    public async Task<IActionResult> Upload(IFormFile? file, string? origen) {
+        // Vuelve a la vista desde la que se subió el archivo
+        var destino = origen == nameof(MyFiles) ? nameof(MyFiles) : nameof(Explorar);
+
+        if (file is null || file.Length == 0) {
             TempData["Error"] = "Seleccioná un archivo.";
-            return RedirectToAction(nameof(Explorar));
+            return RedirectToAction(destino);
         }
-        if (file.Length > MaxFileSize)
-        {
+        if (file.Length > MaxFileSize) {
             TempData["Error"] = "El archivo supera los 50 MB.";
-            return RedirectToAction(nameof(Explorar));
+            return RedirectToAction(destino);
         }
 
         var blobName = Guid.NewGuid().ToString("N");
@@ -59,16 +57,13 @@ public class FilesController : Controller
             ? "application/octet-stream" : file.ContentType;
 
         // 1) Contenido -> Blob Storage
-        await using (var stream = file.OpenReadStream())
-        {
+        await using (var stream = file.OpenReadStream()) {
             await _blobs.UploadAsync(blobName, stream, contentType);
         }
 
         // 2) Metadatos -> Azure SQL
-        try
-        {
-            _db.Files.Add(new StoredFile
-            {
+        try {
+            _db.Files.Add(new StoredFile {
                 OriginalName = Path.GetFileName(file.FileName),
                 BlobName = blobName,
                 ContentType = contentType,
@@ -77,19 +72,16 @@ public class FilesController : Controller
                 UploadedByEmail = User.Identity?.Name ?? ""
             });
             await _db.SaveChangesAsync();
-        }
-        catch
-        {
+        } catch {
             await _blobs.DeleteAsync(blobName); // no dejar blobs huérfanos
             throw;
         }
 
         TempData["Success"] = "Archivo subido correctamente.";
-        return RedirectToAction(nameof(Explorar));
+        return RedirectToAction(destino);
     }
 
-    public async Task<IActionResult> Download(Guid id)
-    {
+    public async Task<IActionResult> Download(Guid id) {
         var meta = await _db.Files.FindAsync(id);
         if (meta is null) return NotFound();
 
@@ -98,8 +90,7 @@ public class FilesController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(Guid id)
-    {
+    public async Task<IActionResult> Delete(Guid id) {
         var meta = await _db.Files.FindAsync(id);
         if (meta is null) return NotFound();
 

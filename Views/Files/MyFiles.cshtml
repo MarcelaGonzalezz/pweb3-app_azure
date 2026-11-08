@@ -14,35 +14,49 @@
     <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @err</div>
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0"><i class="bi bi-folder2-open"></i> Mis documentos</h4>
-    <a asp-action="Index" class="btn btn-primary"><i class="bi bi-cloud-arrow-up"></i> Subir archivo</a>
+<h4 class="pb-2 mb-4 border-bottom"><i class="bi bi-folder2-open icono-celeste"></i> Mis documentos</h4>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-cloud-arrow-up icono-celeste"></i> Subida de archivos</h5>
+        <form asp-action="Upload" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+            <input type="hidden" name="origen" value="MyFiles" />
+            <input type="file" name="file" class="form-control" required />
+            <button class="btn btn-primary">Subir</button>
+        </form>
+    </div>
 </div>
 
-@if (!Model.Any()) {
-    <p class="text-muted">Todavía no subiste ningún archivo.</p>
-} else {
-    <table id="tablaMisArchivos" class="table table-striped align-middle">
-        <thead>
-            <tr><th>Nombre</th><th>Tamaño</th><th>Fecha (UTC)</th><th></th></tr>
-        </thead>
-        <tbody>
-            @foreach (var f in Model) {
-                <tr>
-                    <td><i class="bi bi-file-earmark-text"></i> @f.OriginalName</td>
-                    <td data-order="@f.SizeBytes">@FormatSize(f.SizeBytes)</td>
-                    <td>@f.UploadedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td class="text-end">
-                        <a class="btn btn-sm btn-outline-primary" asp-action="Download" asp-route-id="@f.Id"><i class="bi bi-download"></i> Descargar</a>
-                        <form asp-action="Delete" asp-route-id="@f.Id" method="post" class="d-inline form-eliminar">
-                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<hr class="my-4" />
+
+<section>
+    <h5 class="mb-3"><i class="bi bi-files icono-celeste"></i> Archivos subidos</h5>
+
+    @if (!Model.Any()) {
+        <p class="text-muted">Todavía no subiste ningún archivo.</p>
+    } else {
+        <table id="tablaMisArchivos" class="table table-striped align-middle">
+            <thead>
+                <tr><th>Nombre</th><th>Tamaño</th><th>Fecha (UTC)</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var f in Model) {
+                    <tr>
+                        <td><i class="bi bi-file-earmark-text icono-celeste"></i> @f.OriginalName</td>
+                        <td data-order="@f.SizeBytes">@FormatSize(f.SizeBytes)</td>
+                        <td>@f.UploadedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Download" asp-route-id="@f.Id"><i class="bi bi-download"></i> Descargar</a>
+                            <form asp-action="Delete" asp-route-id="@f.Id" method="post" class="d-inline form-eliminar">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
 
 @section Scripts {
     <script>

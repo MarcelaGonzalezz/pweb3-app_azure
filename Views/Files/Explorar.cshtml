@@ -15,6 +15,7 @@
 @if (TempData["Error"] is string err) {
     <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @err</div>
 }
+<h4 class="pb-2 mb-4 border-bottom"><i class="bi bi-globe2 icono-celeste"></i> Archivos compartidos</h4>
 
 <div class="card mb-4">
     <div class="card-body">
@@ -25,8 +26,8 @@
         </form>
     </div>
 </div>
+<hr class="my-4" />
 
-<h4 class="mb-3"><i class="bi bi-globe2"></i> Archivos compartidos</h4>
 
 @if (!Model.Any()) {
     <p class="text-muted">Todavía no hay archivos.</p>
@@ -38,7 +39,7 @@
         <tbody>
             @foreach (var f in Model) {
                 <tr>
-                    <td><i class="bi bi-file-earmark-text"></i> @f.OriginalName</td>
+                    <td><i class="bi bi-file-earmark-text icono-celeste"></i> @f.OriginalName</td>
                     <td data-order="@f.SizeBytes">@FormatSize(f.SizeBytes)</td>
                     <td>
                         <i class="bi bi-person-circle"></i> @f.UploadedByEmail
