@@ -10,13 +10,14 @@ public class BlobStorageService
 
     public BlobStorageService(IConfiguration config)
     {
+        //nombre del servicio de BLobstorage
         var account = config["Storage:AccountName"]
             ?? throw new InvalidOperationException("Falta Storage:AccountName");
-        var containerName = config["Storage:ContainerName"] ?? "uploads";
+        var containerName = config["Storage:ContainerName"] ?? "uploads"; //nombre del contenedor
 
         // DefaultAzureCredential: Managed Identity en Azure, az login en tu PC
         var runningInAzure = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME"));
-
+        //nosotros elegimos que si esta en azure use ManagedIdentityCredential y si no use AzureCliCredential y VisualStudioCredential
         Azure.Core.TokenCredential credential = runningInAzure
             ? new ManagedIdentityCredential()
             : new ChainedTokenCredential(new AzureCliCredential(), new VisualStudioCredential());

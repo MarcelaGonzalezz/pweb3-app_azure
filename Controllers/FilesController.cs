@@ -52,24 +52,25 @@ public class FilesController : Controller {
             return RedirectToAction(destino);
         }
 
-        var blobName = Guid.NewGuid().ToString("N");
+        var blobName = Guid.NewGuid().ToString("N");//le crea un nombre aleatorio al archivo
         var contentType = string.IsNullOrWhiteSpace(file.ContentType)
-            ? "application/octet-stream" : file.ContentType;
+            ? "application/octet-stream" : file.ContentType;//si no tiene tipo el archivo, ponele tipo generico
 
         // 1) Contenido -> Blob Storage
-        await using (var stream = file.OpenReadStream()) {
-            await _blobs.UploadAsync(blobName, stream, contentType);
+        await using (var stream = file.OpenReadStream()) {//stream es el contenido del archivo que subimos, lo abrimos en modo lectura  
+            await _blobs.UploadAsync(blobName, stream, contentType); //_blobs es la clase que creamos para subir archivos a blob storage,
+                                                                     //le pasamos el nombre del archivo, el contenido y el tipo de contenido
         }
 
         // 2) Metadatos -> Azure SQL
         try {
-            _db.Files.Add(new StoredFile {
+            _db.Files.Add(new StoredFile { //añade el nombre orig del archivo subido
                 OriginalName = Path.GetFileName(file.FileName),
-                BlobName = blobName,
-                ContentType = contentType,
-                SizeBytes = file.Length,
-                UploadedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!,
-                UploadedByEmail = User.Identity?.Name ?? ""
+                BlobName = blobName, //el nombre aleatorio que le pusimos al archivo
+                ContentType = contentType,//el tipo de contenido del archivo
+                SizeBytes = file.Length,//tamaño del archivo
+                UploadedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!,//id del usu
+                UploadedByEmail = User.Identity?.Name ?? ""//mail del usuario que subio el archivo
             });
             await _db.SaveChangesAsync();
         } catch {
